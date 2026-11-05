@@ -1,6 +1,8 @@
-export const dynamic = 'force-dynamic';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export default function HealthPage() {
+  noStore();
+  
   const healthData = {
     status: 'online',
     timestamp: new Date().toISOString(),

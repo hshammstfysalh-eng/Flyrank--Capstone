@@ -1,24 +1,40 @@
-export default function HealthPage() {
-  const healthData = {
-    status: 'online',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    environment: 'production / preview',
-  };
+﻿import { Suspense } from "react";
+import { headers } from "next/headers";
+
+type Health = {
+  status: string;
+  timestamp: string;
+  version: string;
+  environment: string;
+};
+
+async function HealthData() {
+  const h = await headers();
+  const host = h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "http";
+
+  const res = await fetch(`${proto}://${host}/api/health`, {
+    cache: "no-store",
+  });
+  const data: Health = await res.json();
 
   return (
-    <div className="min-h-[80vh] px-[4%] py-12 flex flex-col justify-center max-w-2xl mx-auto space-y-6">
-      <h1 className="text-3xl font-black uppercase tracking-wide">System Health Check</h1>
-      <p className="text-gray-400 text-sm">Server-rendered status page verifying application health and runtime metrics.</p>
-      
-      <div className="bg-[#1f1f1f] p-6 rounded-xl border border-gray-800 font-mono text-sm text-green-400 space-y-2 shadow-xl">
-        <p>&#123;</p>
-        <p className="pl-4">status: <span className="text-white">"{healthData.status}"</span>,</p>
-        <p className="pl-4">timestamp: <span className="text-white">"{healthData.timestamp}"</span>,</p>
-        <p className="pl-4">version: <span className="text-white">"{healthData.version}"</span>,</p>
-        <p className="pl-4">environment: <span className="text-white">"{healthData.environment}"</span></p>
-        <p>&#125;</p>
-      </div>
-    </div>
+    <dl className="space-y-2 rounded-lg border border-neutral-700 p-6">
+      <div><dt className="text-sm text-neutral-400">Status</dt><dd>{data.status}</dd></div>
+      <div><dt className="text-sm text-neutral-400">Timestamp</dt><dd>{data.timestamp}</dd></div>
+      <div><dt className="text-sm text-neutral-400">Version</dt><dd>{data.version}</dd></div>
+      <div><dt className="text-sm text-neutral-400">Environment</dt><dd>{data.environment}</dd></div>
+    </dl>
+  );
+}
+
+export default function HealthPage() {
+  return (
+    <main className="mx-auto max-w-xl p-8">
+      <h1 className="mb-4 text-2xl font-bold">Health Check</h1>
+      <Suspense fallback={<p>Checking...</p>}>
+        <HealthData />
+      </Suspense>
+    </main>
   );
 }
